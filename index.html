@@ -88,8 +88,16 @@
   .stat .num { font-size: 34px; font-weight: 800; font-variant-numeric: tabular-nums; }
   .stat .lbl { font-size: 10.5px; letter-spacing: 0.14em; color: var(--muted); margin-top: 4px; }
 
-  .wc-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; }
+  .wc-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; flex-wrap: wrap; gap: 8px; }
+  .wc-actions { display: flex; gap: 14px; align-items: baseline; }
   .edit-toggle { background: transparent; border: none; color: var(--muted); font-size: 12.5px; text-decoration: underline; }
+  .refresh-btn {
+    background: transparent; border: 1px solid var(--orange); color: var(--orange);
+    border-radius: 5px; padding: 5px 14px; font-size: 12.5px; font-weight: 600;
+  }
+  .refresh-btn:disabled { opacity: 0.5; cursor: default; }
+  .sync-note { font-size: 12.5px; color: var(--dim); margin-bottom: 10px; min-height: 16px; }
+  .sync-note.live { color: var(--amber); }
   .table { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
   .row {
     display: grid; grid-template-columns: 36px 1fr 110px 64px 56px; align-items: center;
@@ -157,8 +165,12 @@
   <div class="section">
     <div class="wc-head">
       <div class="eyebrow cond">NL WILD CARD HUNT</div>
-      <button class="edit-toggle" id="btn-edit">Edit records</button>
+      <div class="wc-actions">
+        <button class="refresh-btn" id="btn-refresh">Refresh from MLB</button>
+        <button class="edit-toggle" id="btn-edit">Edit records</button>
+      </div>
     </div>
+    <div class="sync-note" id="sync-note"></div>
     <div class="table" id="wc-table"></div>
     <div class="table-note">Mets row updates automatically from the run above. Dashed line = playoff cut. GB shown vs. the third wild card.</div>
   </div>
@@ -337,7 +349,104 @@
     });
   }
 
+  // ---------- live standings from MLB StatsAPI ----------
+  const TEAM_MAP = {
+    112: { abbr: "CHC", name: "Cubs" },
+    143: { abbr: "PHI", name: "Phillies" },
+    146: { abbr: "MIA", name: "Marlins" },
+    120: { abbr: "WSH", name: "Nationals" },
+    138: { abbr: "STL", name: "Cardinals" },
+    134: { abbr: "PIT", name: "Pirates" },
+    109: { abbr: "AZ",  name: "D-backs" },
+    135: { abbr: "SD",  name: "Padres" },
+    113: { abbr: "CIN", name: "Reds" },
+    137: { abbr: "SF",  name: "Giants" },
+    115: { abbr: "COL", name: "Rockies" },
+    119: { abbr: "LAD", name: "Dodgers" },
+    158: { abbr: "MIL", name: "Brewers" },
+    144: { abbr: "ATL", name: "Braves" },
+    121: { abbr: "NYM", name: "Mets" },
+  };
+
+  function setSyncNote(msg, isLive) {
+    const n = el("sync-note");
+    n.textContent = msg;
+    n.className = "sync-note" + (isLive ? " live" : "");
+  }
+
+  // Merge a fetched run record into the strip without destroying manual order
+  function applyRun(rw, rl) {
+    const curW = games.filter(g => g === "W").length;
+    const curL = games.length - curW;
+    if (rw === curW && rl === curL) return;
+    if (rw >= curW && rl >= curL) {
+      for (let i = 0; i < rw - curW; i++) games.push("W");
+      for (let i = 0; i < rl - curL; i++) games.push("L");
+    } else {
+      games = Array(rw).fill("W").concat(Array(rl).fill("L"));
+    }
+  }
+
+  async function fetchLive() {
+    const btn = el("btn-refresh");
+    btn.disabled = true;
+    setSyncNote("Updating from MLB\u2026");
+    try {
+      const season = new Date().getFullYear();
+      const res = await fetch(
+        "https://statsapi.mlb.com/api/v1/standings?leagueId=104&season=" + season + "&standingsTypes=regularSeason"
+      );
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      const data = await res.json();
+
+      const all = [];
+      (data.records || []).forEach(div =>
+        (div.teamRecords || []).forEach(tr =>
+          all.push({
+            id: tr.team && tr.team.id,
+            wins: tr.wins,
+            losses: tr.losses,
+            leader: String(tr.divisionRank) === "1",
+          })
+        )
+      );
+      if (!all.length) throw new Error("No records in response");
+
+      // Mets: derive the run from the overall record vs the July 8 baseline
+      const mets = all.find(t => t.id === 121);
+      if (mets) {
+        const rw = Math.max(0, Math.min(TOTAL, mets.wins - BASE_W));
+        const rl = Math.max(0, Math.min(TOTAL - rw, mets.losses - BASE_L));
+        applyRun(rw, rl);
+      }
+
+      // Wild card pool: every NL team except division leaders and the Mets
+      const pool = all.filter(t => t.id !== 121 && !t.leader && TEAM_MAP[t.id]);
+      if (pool.length >= 3) {
+        teams = pool.map(t => ({
+          abbr: TEAM_MAP[t.id].abbr,
+          name: TEAM_MAP[t.id].name,
+          wins: t.wins,
+          losses: t.losses,
+        }));
+      }
+
+      lastUpdated = new Date().toISOString();
+      save();
+      render();
+      setSyncNote(
+        "Live \u2014 standings from MLB, updated " +
+          new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }),
+        true
+      );
+    } catch (e) {
+      setSyncNote("Live update unavailable right now \u2014 showing saved data. You can still edit records by hand.");
+    }
+    btn.disabled = false;
+  }
+
   // ---------- events ----------
+  el("btn-refresh").addEventListener("click", fetchLive);
   el("btn-win").addEventListener("click", () => {
     if (games.length >= TOTAL) return;
     games.push("W"); lastUpdated = new Date().toISOString(); save(); render();
@@ -361,6 +470,7 @@
   // ---------- go ----------
   load();
   render();
+  fetchLive(); // auto-update from MLB every time the page opens
 })();
 </script>
 </body>
