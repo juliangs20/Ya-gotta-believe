@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>The 46–24 Watch · Mets Playoff Chase</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --navy: #0A1830;
+    --panel: #0F1F3A;
+    --line: #1E3050;
+    --line2: #3A4B6B;
+    --orange: #FF5910;
+    --orange-soft: #FFB48A;
+    --ink: #EDEAE2;
+    --muted: #7E8CA8;
+    --dim: #5A6A88;
+    --faint: #3A4B6B;
+    --loss: #2A3B57;
+    --amber: #E8B93E;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body {
+    background: var(--navy);
+    color: var(--ink);
+    font-family: 'Barlow', -apple-system, 'Helvetica Neue', sans-serif;
+    min-height: 100vh;
+    padding-bottom: 64px;
+  }
+  .cond { font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif; }
+  button { cursor: pointer; font-family: inherit; }
+  button:focus-visible, input:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
+  input[type=number] { -moz-appearance: textfield; }
+  input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+  .masthead {
+    border-bottom: 1px solid var(--line);
+    padding: 20px 24px;
+    display: flex; justify-content: space-between; align-items: baseline;
+    flex-wrap: wrap; gap: 8px;
+  }
+  .masthead .title { font-size: 15px; font-weight: 700; letter-spacing: 0.28em; color: var(--orange); }
+  .masthead .sub { font-size: 12px; color: var(--muted); }
+
+  .wrap { max-width: 880px; margin: 0 auto; padding: 40px 24px 0; }
+
+  .eyebrow { font-size: 13px; font-weight: 700; letter-spacing: 0.24em; color: var(--muted); }
+  .record-block { text-align: center; }
+  .big-record {
+    font-size: 128px; font-weight: 800; line-height: 1;
+    margin: 6px 0 2px; font-variant-numeric: tabular-nums;
+  }
+  .big-record .w { color: var(--orange); }
+  .big-record .dash { color: var(--faint); margin: 0 8px; }
+  .big-record .l { color: #B8C2D6; }
+  .overall { font-size: 15px; color: var(--muted); }
+  .overall b { color: var(--ink); font-weight: 600; }
+  .status { margin-top: 14px; font-size: 15px; font-weight: 600; }
+
+  .actions { display: flex; gap: 12px; justify-content: center; margin-top: 28px; flex-wrap: wrap; align-items: center; }
+  .btn-win, .btn-loss {
+    border-radius: 6px; padding: 12px 36px; font-size: 22px; font-weight: 800;
+    letter-spacing: 0.08em; transition: transform .12s;
+  }
+  .btn-win { background: var(--orange); color: var(--navy); border: none; }
+  .btn-loss { background: transparent; color: #B8C2D6; border: 1px solid var(--line2); }
+  .btn-win:hover, .btn-loss:hover { transform: translateY(-1px); }
+  .btn-win:disabled, .btn-loss:disabled { opacity: 0.4; cursor: default; transform: none; }
+  .link-btn { background: transparent; color: var(--muted); border: none; font-size: 13px; text-decoration: underline; }
+  .link-btn:disabled { opacity: 0.4; cursor: default; }
+
+  .section { margin-top: 40px; }
+  .strip { display: grid; grid-template-columns: repeat(14, 1fr); gap: 4px; margin-top: 10px; }
+  .cell {
+    aspect-ratio: 1; border-radius: 3px; background: #13233F; border: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 700; color: var(--dim); transition: background .2s;
+  }
+  .cell.W { background: var(--orange); border: none; color: var(--navy); }
+  .cell.L { background: var(--loss); border: none; color: var(--dim); }
+  .strip-caption { display: flex; justify-content: space-between; font-size: 12px; color: var(--dim); margin-top: 8px; }
+
+  .pace-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 32px; }
+  .stat { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 16px 12px; text-align: center; }
+  .stat .num { font-size: 34px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .stat .lbl { font-size: 10.5px; letter-spacing: 0.14em; color: var(--muted); margin-top: 4px; }
+
+  .wc-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; }
+  .edit-toggle { background: transparent; border: none; color: var(--muted); font-size: 12.5px; text-decoration: underline; }
+  .table { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  .row {
+    display: grid; grid-template-columns: 36px 1fr 110px 64px 56px; align-items: center;
+    padding: 9px 16px; font-size: 14.5px; border-left: 3px solid transparent;
+  }
+  .row.mets { background: rgba(255,89,16,0.10); border-left-color: var(--orange); }
+  .row .rank { font-weight: 700; font-size: 15px; color: var(--dim); }
+  .row.in .rank { color: var(--orange); }
+  .row .team { font-weight: 500; }
+  .row.mets .team { font-weight: 700; color: var(--orange-soft); }
+  .wc-tag { font-size: 10.5px; color: var(--orange); margin-left: 8px; letter-spacing: 0.1em; }
+  .row .rec, .row .pct, .row .gb { text-align: right; font-variant-numeric: tabular-nums; }
+  .row .rec { color: #B8C2D6; }
+  .row.mets .rec { color: var(--orange-soft); }
+  .row .pct, .row .gb { color: var(--muted); font-size: 13.5px; }
+  .cut { border-top: 2px dashed var(--orange); opacity: 0.55; }
+  .rec-edit { display: flex; gap: 6px; justify-content: flex-end; }
+  .rec-edit input {
+    width: 48px; background: var(--navy); border: 1px solid var(--line2); color: var(--ink);
+    border-radius: 4px; padding: 3px 6px; font-size: 13.5px; text-align: center;
+  }
+  .table-note { font-size: 11.5px; color: var(--dim); margin-top: 8px; }
+
+  .footer { margin-top: 40px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+  .believe { font-size: 11.5px; color: var(--faint); font-style: italic; }
+  .reset { background: transparent; border: none; color: var(--dim); font-size: 11.5px; text-decoration: underline; }
+
+  @media (max-width: 640px) {
+    .big-record { font-size: 88px; }
+    .pace-grid { grid-template-columns: repeat(2, 1fr); }
+    .row { grid-template-columns: 28px 1fr 92px 52px 44px; font-size: 13.5px; padding: 9px 10px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="masthead">
+  <div class="title cond">THE 46–24 WATCH</div>
+  <div class="sub" id="masthead-sub">Since July 8, 2026 · baseline 38-54</div>
+</div>
+
+<div class="wrap">
+
+  <div class="record-block">
+    <div class="eyebrow cond">THE RUN</div>
+    <div class="big-record cond" id="big-record"></div>
+    <div class="overall" id="overall"></div>
+    <div class="status" id="status"></div>
+  </div>
+
+  <div class="actions">
+    <button class="btn-win cond" id="btn-win">METS WIN</button>
+    <button class="btn-loss cond" id="btn-loss">METS LOSS</button>
+    <button class="link-btn" id="btn-undo">Undo last</button>
+  </div>
+
+  <div class="section">
+    <div class="eyebrow cond">THE FINAL 70</div>
+    <div class="strip" id="strip"></div>
+    <div class="strip-caption"><span id="played-cap"></span><span id="left-cap"></span></div>
+  </div>
+
+  <div class="pace-grid" id="pace-grid"></div>
+
+  <div class="section">
+    <div class="wc-head">
+      <div class="eyebrow cond">NL WILD CARD HUNT</div>
+      <button class="edit-toggle" id="btn-edit">Edit records</button>
+    </div>
+    <div class="table" id="wc-table"></div>
+    <div class="table-note">Mets row updates automatically from the run above. Dashed line = playoff cut. GB shown vs. the third wild card.</div>
+  </div>
+
+  <div class="footer">
+    <div class="believe">"Ya gotta believe." — Tug McGraw, 1973. That team was buried in last place in August and won the pennant.</div>
+    <button class="reset" id="btn-reset">Reset everything</button>
+  </div>
+
+</div>
+
+<script>
+(function () {
+  // ---------- constants ----------
+  const BASE_W = 38, BASE_L = 54;
+  const TARGET_W = 46, TARGET_L = 24;
+  const TOTAL = 70;
+  const KEY = "mets-4624-tracker-v1";
+
+  const DEFAULT_TEAMS = [
+    { abbr: "CHC", name: "Cubs",      wins: 52, losses: 40 },
+    { abbr: "PHI", name: "Phillies",  wins: 51, losses: 41 },
+    { abbr: "MIA", name: "Marlins",   wins: 51, losses: 42 },
+    { abbr: "WSH", name: "Nationals", wins: 48, losses: 46 },
+    { abbr: "STL", name: "Cardinals", wins: 47, losses: 43 },
+    { abbr: "PIT", name: "Pirates",   wins: 47, losses: 46 },
+    { abbr: "AZ",  name: "D-backs",   wins: 45, losses: 46 },
+    { abbr: "SD",  name: "Padres",    wins: 45, losses: 46 },
+    { abbr: "CIN", name: "Reds",      wins: 41, losses: 49 },
+    { abbr: "SF",  name: "Giants",    wins: 38, losses: 54 },
+    { abbr: "COL", name: "Rockies",   wins: 38, losses: 55 },
+  ];
+
+  // ---------- state ----------
+  let games = [];        // array of 'W' | 'L'
+  let teams = JSON.parse(JSON.stringify(DEFAULT_TEAMS));
+  let lastUpdated = null;
+  let editing = false;
+
+  // ---------- persistence ----------
+  function load() {
+    try {
+      const raw = localStorage.getItem(KEY);
+      if (!raw) return;
+      const d = JSON.parse(raw);
+      if (Array.isArray(d.games)) games = d.games;
+      if (Array.isArray(d.teams) && d.teams.length) teams = d.teams;
+      if (d.lastUpdated) lastUpdated = d.lastUpdated;
+    } catch (e) { /* fresh start */ }
+  }
+  function save() {
+    try {
+      localStorage.setItem(KEY, JSON.stringify({ games, teams, lastUpdated }));
+    } catch (e) { console.error("Save failed", e); }
+  }
+
+  // ---------- helpers ----------
+  const pct = (w, l) => (w + l === 0 ? 0 : w / (w + l));
+  const fmtPct = (p) => (p >= 1 ? "1.000" : p.toFixed(3).replace(/^0/, ""));
+  const el = (id) => document.getElementById(id);
+  const esc = (s) => String(s).replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+
+  // ---------- render ----------
+  function render() {
+    const runW = games.filter(g => g === "W").length;
+    const runL = games.length - runW;
+    const played = games.length;
+    const remaining = TOTAL - played;
+    const overallW = BASE_W + runW;
+    const overallL = BASE_L + runL;
+    const winsNeeded = Math.max(0, TARGET_W - runW);
+    const lossBudget = TARGET_L - runL;
+    const alive = lossBudget >= 0 && winsNeeded <= remaining;
+    const neededRate = remaining > 0 ? winsNeeded / remaining : 0;
+    const bestPossible = overallW + remaining;
+
+    // masthead
+    el("masthead-sub").textContent = "Since July 8, 2026 · baseline 38-54" +
+      (lastUpdated ? " · updated " + new Date(lastUpdated).toLocaleDateString() : "");
+
+    // record
+    el("big-record").innerHTML =
+      '<span class="w">' + runW + '</span><span class="dash">–</span><span class="l">' + runL + '</span>';
+    el("overall").innerHTML =
+      'Overall: <b>' + overallW + '-' + overallL + '</b> · chasing <b>84-78</b>';
+
+    // status line
+    let text, tone;
+    if (!alive) {
+      text = "The 84-win path is gone. Best possible finish: " + bestPossible + "-" + (162 - bestPossible) + ".";
+      tone = "#8A93A6";
+    } else if (winsNeeded === 0 && played > 0) {
+      text = "46 wins banked. Ya gotta believe.";
+      tone = "var(--orange)";
+    } else if (played === 0) {
+      text = "70 games. 46 wins needed. Ya gotta believe — the '73 Mets came back from the dead too.";
+      tone = "var(--orange)";
+    } else {
+      const cur = pct(runW, runL);
+      const rate = fmtPct(neededRate);
+      text = cur >= neededRate
+        ? "On pace. Needs " + rate + " ball the rest of the way."
+        : "Behind pace. Needs " + rate + " ball over the final " + remaining + ".";
+      tone = cur >= neededRate ? "var(--orange)" : "var(--amber)";
+    }
+    el("status").textContent = text;
+    el("status").style.color = tone;
+
+    // buttons
+    el("btn-win").disabled = remaining <= 0;
+    el("btn-loss").disabled = remaining <= 0;
+    el("btn-undo").disabled = played === 0;
+
+    // strip
+    let stripHtml = "";
+    for (let i = 0; i < TOTAL; i++) {
+      const g = games[i] || "";
+      stripHtml += '<div class="cell ' + g + '" title="Game ' + (i + 1) + (g ? ": " + g : "") + '">' + g + "</div>";
+    }
+    el("strip").innerHTML = stripHtml;
+    el("played-cap").textContent = played + " played";
+    el("left-cap").textContent = remaining + " to go";
+
+    // standings (needed for GB stat)
+    const rows = teams
+      .map(t => ({ ...t }))
+      .concat([{ abbr: "NYM", name: "Mets", wins: overallW, losses: overallL, isMets: true }])
+      .sort((a, b) => pct(b.wins, b.losses) - pct(a.wins, a.losses));
+    const wc3 = rows[2];
+    const gbWC3 = ((wc3.wins - overallW) + (overallL - wc3.losses)) / 2;
+
+    // pace stats
+    const stats = [
+      { label: "WINS STILL NEEDED", value: winsNeeded, accent: true },
+      { label: "LOSSES TO SPARE", value: Math.max(0, lossBudget) },
+      { label: "REQUIRED PACE", value: (remaining > 0 && alive) ? fmtPct(neededRate) : "—" },
+      { label: "GAMES BEHIND WC3", value: gbWC3 <= 0 ? "IN" : gbWC3.toFixed(1) },
+    ];
+    el("pace-grid").innerHTML = stats.map(s =>
+      '<div class="stat"><div class="num cond" style="color:' + (s.accent ? "var(--orange)" : "var(--ink)") + '">' +
+      s.value + '</div><div class="lbl">' + s.label + "</div></div>"
+    ).join("");
+
+    // wild card table
+    let tableHtml = "";
+    rows.forEach((t, i) => {
+      const gb = ((rows[2].wins - t.wins) + (t.losses - rows[2].losses)) / 2;
+      const recCell = (editing && !t.isMets)
+        ? '<span class="rec-edit">' +
+          '<input type="number" min="0" max="162" value="' + t.wins + '" data-abbr="' + t.abbr + '" data-field="wins" aria-label="' + esc(t.name) + ' wins" />' +
+          '<input type="number" min="0" max="162" value="' + t.losses + '" data-abbr="' + t.abbr + '" data-field="losses" aria-label="' + esc(t.name) + ' losses" />' +
+          "</span>"
+        : '<span class="rec">' + t.wins + "-" + t.losses + "</span>";
+      tableHtml +=
+        '<div class="row' + (t.isMets ? " mets" : "") + (i < 3 ? " in" : "") + '">' +
+        '<span class="rank cond">' + (i + 1) + "</span>" +
+        '<span class="team">' + esc(t.name) + (i < 3 ? '<span class="wc-tag">WC' + (i + 1) + "</span>" : "") + "</span>" +
+        recCell +
+        '<span class="pct">' + fmtPct(pct(t.wins, t.losses)) + "</span>" +
+        '<span class="gb">' + (gb <= 0 ? "—" : gb.toFixed(1)) + "</span>" +
+        "</div>" +
+        (i === 2 ? '<div class="cut"></div>' : "");
+    });
+    el("wc-table").innerHTML = tableHtml;
+    el("btn-edit").textContent = editing ? "Done editing" : "Edit records";
+
+    // wire up edit inputs
+    el("wc-table").querySelectorAll("input").forEach(input => {
+      input.addEventListener("change", (e) => {
+        const abbr = e.target.dataset.abbr;
+        const field = e.target.dataset.field;
+        const n = Math.max(0, Math.min(162, parseInt(e.target.value || "0", 10)));
+        const team = teams.find(t => t.abbr === abbr);
+        if (team) { team[field] = n; lastUpdated = new Date().toISOString(); save(); render(); }
+      });
+    });
+  }
+
+  // ---------- events ----------
+  el("btn-win").addEventListener("click", () => {
+    if (games.length >= TOTAL) return;
+    games.push("W"); lastUpdated = new Date().toISOString(); save(); render();
+  });
+  el("btn-loss").addEventListener("click", () => {
+    if (games.length >= TOTAL) return;
+    games.push("L"); lastUpdated = new Date().toISOString(); save(); render();
+  });
+  el("btn-undo").addEventListener("click", () => {
+    games.pop(); save(); render();
+  });
+  el("btn-edit").addEventListener("click", () => { editing = !editing; render(); });
+  el("btn-reset").addEventListener("click", () => {
+    if (!confirm("Reset the run to 0-0 and restore the July 8 standings?")) return;
+    games = [];
+    teams = JSON.parse(JSON.stringify(DEFAULT_TEAMS));
+    lastUpdated = null;
+    save(); render();
+  });
+
+  // ---------- go ----------
+  load();
+  render();
+})();
+</script>
+</body>
+</html>
