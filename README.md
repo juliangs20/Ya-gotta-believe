@@ -1,3 +1,5 @@
+BUILT BY AI, NOT ME
+
 # The 46–24 Watch
 
 A daily tracker for the 2026 Mets playoff chase. Starting from their 38-54 record on July 8, they need to go 46-24 over the final 70 games to reach 84 wins. Ya gotta believe.
